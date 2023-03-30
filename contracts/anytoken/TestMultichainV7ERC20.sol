@@ -154,7 +154,7 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     }
 }
 
-contract MultichainV7ERC20WithUnderlying is MultichainV7ERC20 {
+contract TestWrap is MultichainV7ERC20 {
     using SafeERC20 for IERC20;
 
     address public immutable override underlying;
