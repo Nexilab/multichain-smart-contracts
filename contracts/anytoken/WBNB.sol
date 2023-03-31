@@ -64,7 +64,6 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
         _unpause(role);
     }
 
-
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -151,7 +150,7 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     }
 }
 
-contract TestWrap is MultichainV7ERC20 {
+contract MultichainV7ERC20WithUnderlying is MultichainV7ERC20 {
     using SafeERC20 for IERC20;
 
     address public immutable override underlying;
@@ -159,10 +158,20 @@ contract TestWrap is MultichainV7ERC20 {
     event Deposit(address indexed from, address indexed to, uint256 amount);
     event Withdraw(address indexed from, address indexed to, uint256 amount);
 
-    constructor() MultichainV7ERC20("Wrapped Test", "WTEST", 18, 10_000_000_000 * 10 ** 18, 0x06aD7D3FB4de5302f7659aB9455541D3c88786A2){
-        underlying = 0x970609bA2C160a1b491b90867681918BDc9773aF;
-    }
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals,
+        uint256 _cap,
+        address _admin,
+        address _underlying
+    ) MultichainV7ERC20(_name, _symbol, _decimals, _cap, _admin) {
+        require(_underlying != address(0), "underlying is the zero address");
+        require(_underlying != address(this), "underlying is same to address(this)");
+        require(_decimals == IERC20Metadata(_underlying).decimals(), "decimals mismatch");
 
+        underlying = _underlying;
+    }
 
     function deposit(uint256 amount) public returns (uint256) {
         return deposit(amount, msg.sender);
@@ -184,5 +193,9 @@ contract TestWrap is MultichainV7ERC20 {
         IERC20(underlying).safeTransfer(to, amount);
         emit Withdraw(msg.sender, to, amount);
         return amount;
+    }
+}
+contract WBNB is MultichainV7ERC20 {
+    constructor() MultichainV7ERC20("Wrapped BNB", "WBNB", 18, 1_000_000_000 * 10 ** 18, 0x9029660f74eC130CEdb90B42F4524BB2799A20A2){
     }
 }

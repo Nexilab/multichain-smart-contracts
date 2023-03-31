@@ -63,10 +63,6 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     function unpause(bytes32 role) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause(role);
     }
-    function setCap(uint256 newCap) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newCap >= totalSupply(), "ERC20Capped: new cap must be greater than or equal to total supply");
-    _   cap = newCap;
-    }
 
     function _beforeTokenTransfer(
         address from,
