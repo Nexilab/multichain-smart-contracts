@@ -11,7 +11,6 @@ import "../access/PausableControl.sol";
 contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerable, PausableControl {
     // access control roles
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant FREEZE_ROLE = keccak256("FREEZE_ROLE");
 
     // pausable control roles
     bytes32 public constant PAUSE_MINT_ROLE = keccak256("PAUSE_MINT_ROLE");
@@ -25,28 +24,11 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     }
 
     mapping(address => Supply) public minterSupply;
-    mapping(address => bool) private _frozenAccounts;
 
     uint8 immutable _tokenDecimals;
 
     event LogSwapin(bytes32 indexed txhash, address indexed account, uint256 amount);
     event LogSwapout(address indexed account, address indexed bindaddr, uint256 amount);
-
-    // Modifier to check if an account is frozen
-    modifier notFrozen(address account) {
-        require(!_frozenAccounts[account], "Account is frozen");
-        _;
-    }
-
-    // Freeze an account
-    function freezeAccount(address account) external onlyRole(FREEZE_ROLE) {
-        _frozenAccounts[account] = true;
-    }
-
-    // Unfreeze an account
-    function unfreezeAccount(address account) external onlyRole(FREEZE_ROLE) {
-        _frozenAccounts[account] = false;
-    }
 
     constructor(
         string memory _name,
@@ -87,10 +69,9 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
         address to,
         uint256 amount
     ) internal virtual override {
-        require(!paused(PAUSE_TRANSFER_ROLE), "Token transfer while paused");
-        require(!_frozenAccounts[from], "Sender account is frozen");
-        require(!_frozenAccounts[to], "Recipient account is frozen");
         super._beforeTokenTransfer(from, to, amount);
+
+        require(!paused(PAUSE_TRANSFER_ROLE), "token transfer while paused");
     }
 
     function _mint(address to, uint256 amount) internal virtual override(ERC20, ERC20Capped) {
@@ -153,14 +134,6 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
         minterSupply[minter].max = 0;
     }
 
-    function addFreezer(address freezer) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(FREEZE_ROLE, freezer);
-    }
-
-    function removeFreezer(address freezer) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _revokeRole(FREEZE_ROLE, freezer);
-    }
-
     function setMinterCap(address minter, uint256 cap) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(MINTER_ROLE, minter), "not minter");
         minterSupply[minter].cap = cap;
@@ -220,5 +193,9 @@ contract MultichainV7ERC20WithUnderlying is MultichainV7ERC20 {
         IERC20(underlying).safeTransfer(to, amount);
         emit Withdraw(msg.sender, to, amount);
         return amount;
+    }
+}
+contract WBUSD is MultichainV7ERC20 {
+    constructor() MultichainV7ERC20("Wrapped BUSD", "WBUSD", 18, 100_000_000_000 * 10 ** 18, 0x935c8DB019469FF1Af1c903defbEef0382E4462C){
     }
 }

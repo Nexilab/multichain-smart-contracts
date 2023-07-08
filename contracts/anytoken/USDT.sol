@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../access/PausableControl.sol";
 
-contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerable, PausableControl {
+contract PlgchainV1ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerable, PausableControl {
     // access control roles
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant FREEZE_ROLE = keccak256("FREEZE_ROLE");
@@ -25,7 +25,8 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     }
 
     mapping(address => Supply) public minterSupply;
-    mapping(address => bool) private _frozenAccounts;
+    address[] private _frozenAccounts;
+
 
     uint8 immutable _tokenDecimals;
 
@@ -33,19 +34,37 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     event LogSwapout(address indexed account, address indexed bindaddr, uint256 amount);
 
     // Modifier to check if an account is frozen
+    // Modifier to check if an account is frozen
     modifier notFrozen(address account) {
-        require(!_frozenAccounts[account], "Account is frozen");
+        require(!_isFrozen(account), "Account is frozen");
         _;
+    }
+
+    // Check if an account is frozen
+    function _isFrozen(address account) internal view returns (bool) {
+        for (uint256 i = 0; i < _frozenAccounts.length; i++) {
+            if (_frozenAccounts[i] == account) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Freeze an account
     function freezeAccount(address account) external onlyRole(FREEZE_ROLE) {
-        _frozenAccounts[account] = true;
+        require(!_isFrozen(account), "Account is already frozen");
+        _frozenAccounts.push(account);
     }
 
     // Unfreeze an account
     function unfreezeAccount(address account) external onlyRole(FREEZE_ROLE) {
-        _frozenAccounts[account] = false;
+        for (uint256 i = 0; i < _frozenAccounts.length; i++) {
+            if (_frozenAccounts[i] == account) {
+                _frozenAccounts[i] = _frozenAccounts[_frozenAccounts.length - 1];
+                _frozenAccounts.pop();
+                break;
+            }
+        }
     }
 
     constructor(
@@ -88,8 +107,8 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
         uint256 amount
     ) internal virtual override {
         require(!paused(PAUSE_TRANSFER_ROLE), "Token transfer while paused");
-        require(!_frozenAccounts[from], "Sender account is frozen");
-        require(!_frozenAccounts[to], "Recipient account is frozen");
+        require(!_isFrozen(from), "Sender account is frozen");
+        require(!_isFrozen(to), "Recipient account is frozen");
         super._beforeTokenTransfer(from, to, amount);
     }
 
@@ -177,7 +196,7 @@ contract MultichainV7ERC20 is ERC20Capped, ERC20Burnable, AccessControlEnumerabl
     }
 }
 
-contract MultichainV7ERC20WithUnderlying is MultichainV7ERC20 {
+contract PlgchainV1ERC20WithUnderlying is PlgchainV1ERC20 {
     using SafeERC20 for IERC20;
 
     address public immutable override underlying;
@@ -192,7 +211,7 @@ contract MultichainV7ERC20WithUnderlying is MultichainV7ERC20 {
         uint256 _cap,
         address _admin,
         address _underlying
-    ) MultichainV7ERC20(_name, _symbol, _decimals, _cap, _admin) {
+    ) PlgchainV1ERC20(_name, _symbol, _decimals, _cap, _admin) {
         require(_underlying != address(0), "underlying is the zero address");
         require(_underlying != address(this), "underlying is same to address(this)");
         require(_decimals == IERC20Metadata(_underlying).decimals(), "decimals mismatch");
@@ -220,5 +239,10 @@ contract MultichainV7ERC20WithUnderlying is MultichainV7ERC20 {
         IERC20(underlying).safeTransfer(to, amount);
         emit Withdraw(msg.sender, to, amount);
         return amount;
+    }
+}
+
+contract USDT is PlgchainV1ERC20 {
+    constructor() PlgchainV1ERC20("Tether USD", "USDT", 18, 500_000_000_000 * 10 ** 18, 0x1c8324C3a750b9D9Ff6e677aC8FD08eB7E9960dc){
     }
 }

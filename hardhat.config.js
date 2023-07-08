@@ -9,16 +9,30 @@ require("@ericxstone/hardhat-blockscout-verify");
 
 module.exports = {
   solidity: {
-    version: "0.8.17",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 10000000,
+          },
+        },
       },
-    },
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
   },
+
   blockscoutVerify: {
-    blockscoutURL: "http://46.102.129.40:3000",
+    blockscoutURL: "http://185.173.129.244:4000/",
     contracts: {
       CashUSDV3: {
         //compilerVersion: SOLIDITY_VERSION."0.8.12", // checkout enum SOLIDITY_VERSION
@@ -29,23 +43,38 @@ module.exports = {
     },
   },
   networks: {
-    Nexi: {
+    plgchain: {
+      chainId: 242,
       url: process.env.URL,
+      accounts: [process.env.PRIVATE_KEY],
+    },
+    nexichain: {
+      chainId: 4242,
+      url: "http://185.128.137.243:18545",
       accounts: [process.env.PRIVATE_KEY],
     },
   },
   etherscan: {
     apiKey: {
-      Nexi: "aaaaaaaaaaaa",
+      plgchain: "aaaaaaaaaaaa",
+      nexichain: "aaaaaaaaaaaa",
     },
 
     customChains: [
       {
-        network: "Nexi",
+        network: "plgchain",
+        chainId: 242,
+        urls: {
+          apiURL: "http://185.128.137.241:4000/api",
+          browserURL: "http://185.128.137.241:4000",
+        },
+      },
+      {
+        network: "nexichain",
         chainId: 4242,
         urls: {
-          apiURL: "http://46.102.129.40:3000/api",
-          browserURL: "http://46.102.129.40:3000",
+          apiURL: "http://185.173.129.242:4000/api",
+          browserURL: "http://185.173.129.242:4000",
         },
       },
     ],
