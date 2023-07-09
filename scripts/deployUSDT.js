@@ -8,7 +8,6 @@ async function deployUSDT() {
    //   gasLimit: 20000000, // افزایش محدوده gas
    // }
     //const contract = await WrappedUSDT.deploy(options);
-    const adminAccount = "0x4DA7D707F363A3Dd372b2e91e721168bafe77062";
     const contract = await WrappedUSDT.deploy();
     await contract.deployed();
     console.log("USDT deployed to:", contract.address);
