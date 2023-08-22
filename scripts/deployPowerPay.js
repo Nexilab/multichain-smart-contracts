@@ -12,16 +12,16 @@ async function deployPowerPayToken() {
     const contract = await PowerPayToken.deploy();
     await contract.deployed();
     console.log("PowerPayToken deployed to:", contract.address);
-    const amountInEther = "10000000000";
-    const amountInWei = ethers.utils.parseEther(amountInEther);
-    const maxMintInEther = "500000000000";
-    const maxMintInWei = ethers.utils.parseEther(maxMintInEther);
-    await contract.addMinter(adminAccount,maxMintInWei,maxMintInWei);
-    console.log("add Minter %s to PowerPayToken", adminAccount );
-    await contract.addFreezer(adminAccount);
-    console.log("add Freezer %s to USDT", adminAccount );
-    await contract.mint(adminAccount,amountInWei);
-    console.log("%s token minted to acount %s PowerPayToken", amountInEther,adminAccount );
+  //  const amountInEther = "10000000000";
+  //  const amountInWei = ethers.utils.parseEther(amountInEther);
+  //  const maxMintInEther = "500000000000";
+   // const maxMintInWei = ethers.utils.parseEther(maxMintInEther);
+ //   await contract.addMinter(adminAccount,maxMintInWei,maxMintInWei);
+  //  console.log("add Minter %s to PowerPayToken", adminAccount );
+  //  await contract.addFreezer(adminAccount);
+  //  console.log("add Freezer %s to USDT", adminAccount );
+  //  await contract.mint(adminAccount,amountInWei);
+  //  console.log("%s token minted to acount %s PowerPayToken", amountInEther,adminAccount );
 }
 deployPowerPayToken()
   .then(() => process.exit(0))
